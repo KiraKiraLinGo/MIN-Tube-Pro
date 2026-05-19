@@ -1508,6 +1508,14 @@ app.get("/sys-update", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "app/update.html"));
 });
 
+app.get("/classroom.192", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "img/classroom.192.png"));
+});
+
+app.get("/classroom.512", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "img/classroom.512.png"));
+});
+
 app.get("/api/channel", async (req, res) => {
   const channelName = req.query.name || req.query.id;
   const page = parseInt(req.query.page) || 0;
