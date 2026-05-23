@@ -923,6 +923,39 @@ app.get('/rapid/:id', async (req, res) => {
   }
 });
 
+// --- 追加: コメントの追加読み込み用API ---
+app.get("/api/comments/:videoId", async (req, res) => {
+  const videoId = req.params.videoId;
+  const continuation = req.query.continuation || ""; // 続きのトークン
+
+  for (const apiBase of apiListCache) {
+    try {
+      // 既存の取得ロジックに continuation を乗せる
+      const url = `${apiBase}/api/comments/${videoId}${continuation ? '?continuation=' + continuation : ''}`;
+      const cRes = await fetchWithTimeout(url, {}, 3000);
+      if (cRes.ok) {
+        const data = await cRes.json();
+        return res.json(data); // 成功したら即座に返す
+      }
+    } catch (e) { continue; }
+  }
+  res.status(500).json({ error: "コメントの取得に失敗しました" });
+});
+
+// --- 修正: 既存の /api/channel (ページングをより確実に) ---
+app.get("/api/channel", async (req, res) => {
+  const channelName = req.query.name || req.query.id;
+  const page = parseInt(req.query.page) || 0;
+  if (!channelName) return res.status(400).json({ error: "name required" });
+  try {
+    // 既存の yts を使用
+    const results = await yts.GetListByKeyword(channelName, false, 20); // ytsの仕様に合わせる
+    const videos = (results.items || []).filter(item => item.type === 'video');
+    res.json({ channelName, videos, nextPage: page + 1 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.get('/streams', (req, res) => {
     const cacheData = Object.fromEntries(videoCache);
